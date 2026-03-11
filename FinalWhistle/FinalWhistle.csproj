@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <ItemGroup>
+    <ProjectReference Include="..\FinalWhistle.Application\FinalWhistle.Application.csproj" />
+    <ProjectReference Include="..\FinalWhistle.Infrastructure\FinalWhistle.Infrastructure.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
