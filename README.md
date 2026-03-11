@@ -271,4 +271,4 @@ All rights reserved. © 2025 COPA ELITE WORLD CUP 2026
 
 ## Contact
 
-For questions or support, contact the project administrator.
+For questions or support, https://portfolio-mct.vercel.app
