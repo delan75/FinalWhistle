@@ -1,0 +1,101 @@
+@model IEnumerable<FinalWhistle.Domain.Entities.Match>
+@{
+    ViewData["Title"] = "Matches Management";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Matches Management</h2>
+        <a asp-action="Create" class="btn btn-primary">Schedule New Match</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Filter by Stage</label>
+                    <select name="stage" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Stages</option>
+                        @foreach (var item in (SelectList)ViewBag.Stages)
+                        {
+                            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                        }
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Stage</th>
+                    <th>Match</th>
+                    <th>Group</th>
+                    <th>Status</th>
+                    <th>Score</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var match in Model)
+                {
+                    <tr>
+                        <td>
+                            <small>@match.KickoffTime.ToString("MMM dd, yyyy")</small><br />
+                            <strong>@match.KickoffTime.ToString("HH:mm")</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">@match.Stage</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span>@(match.HomeTeam?.Name ?? "TBD")</span>
+                                <strong>vs</strong>
+                                <span>@(match.AwayTeam?.Name ?? "TBD")</span>
+                            </div>
+                        </td>
+                        <td>@(match.Group?.Name ?? "-")</td>
+                        <td>
+                            @switch (match.Status)
+                            {
+                                case FinalWhistle.Domain.Enums.MatchStatus.Scheduled:
+                                    <span class="badge bg-secondary">Scheduled</span>
+                                    break;
+                                case FinalWhistle.Domain.Enums.MatchStatus.Live:
+                                    <span class="badge bg-success">Live</span>
+                                    break;
+                                case FinalWhistle.Domain.Enums.MatchStatus.Completed:
+                                    <span class="badge bg-dark">Completed</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            @if (match.Result != null)
+                            {
+                                <strong>@match.Result.HomeGoals - @match.Result.AwayGoals</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@match.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@match.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center">
+            <p class="mb-0">No matches scheduled yet. <a asp-action="Create">Schedule your first match</a></p>
+        </div>
+    }
+</div>
