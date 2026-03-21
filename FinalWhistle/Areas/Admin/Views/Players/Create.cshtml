@@ -1,0 +1,79 @@
+@model FinalWhistle.Domain.Entities.Player
+@{
+    ViewData["Title"] = "Add New Player";
+}
+
+<div class="container mt-4">
+    <h2>Add New Player</h2>
+    <hr />
+
+    <form asp-action="Create" method="post">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="TeamId" class="form-label">Team</label>
+                    <select asp-for="TeamId" class="form-select" asp-items="ViewBag.Teams">
+                        <option value="">-- Select Team --</option>
+                    </select>
+                    <span asp-validation-for="TeamId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label">Player Name</label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g., Lionel Messi" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Position" class="form-label">Position</label>
+                    <select asp-for="Position" class="form-select" asp-items="ViewBag.Positions"></select>
+                    <span asp-validation-for="Position" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="JerseyNumber" class="form-label">Jersey Number</label>
+                    <input asp-for="JerseyNumber" class="form-control" type="number" min="1" max="99" />
+                    <span asp-validation-for="JerseyNumber" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <h5 class="mb-3">Statistics</h5>
+                
+                <div class="mb-3">
+                    <label asp-for="Goals" class="form-label">Goals</label>
+                    <input asp-for="Goals" class="form-control" type="number" min="0" value="0" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Assists" class="form-label">Assists</label>
+                    <input asp-for="Assists" class="form-control" type="number" min="0" value="0" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="YellowCards" class="form-label">Yellow Cards 🟨</label>
+                    <input asp-for="YellowCards" class="form-control" type="number" min="0" value="0" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="RedCards" class="form-label">Red Cards 🟥</label>
+                    <input asp-for="RedCards" class="form-control" type="number" min="0" value="0" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MinutesPlayed" class="form-label">Minutes Played</label>
+                    <input asp-for="MinutesPlayed" class="form-control" type="number" min="0" value="0" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Create Player</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

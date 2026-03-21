@@ -1,0 +1,91 @@
+@model IEnumerable<FinalWhistle.Domain.Entities.Player>
+@{
+    ViewData["Title"] = "Players Management";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Players Management</h2>
+        <a asp-action="Create" asp-route-teamId="@ViewBag.SelectedTeam?.Id" class="btn btn-primary">Add New Player</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Filter by Team</label>
+                    <select name="teamId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Teams</option>
+                        @foreach (var item in (SelectList)ViewBag.Teams)
+                        {
+                            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                        }
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (ViewBag.SelectedTeam != null)
+    {
+        <div class="alert alert-info">
+            Showing players for: <strong>@ViewBag.SelectedTeam.Name</strong>
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-2">Clear Filter</a>
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Team</th>
+                    <th>Position</th>
+                    <th>Goals</th>
+                    <th>Assists</th>
+                    <th>Cards</th>
+                    <th>Minutes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in Model)
+                {
+                    <tr>
+                        <td><strong>@player.JerseyNumber</strong></td>
+                        <td>@player.Name</td>
+                        <td>@player.Team.Name</td>
+                        <td>
+                            <span class="badge bg-secondary">@player.Position</span>
+                        </td>
+                        <td>@player.Goals</td>
+                        <td>@player.Assists</td>
+                        <td>
+                            @if (player.YellowCards > 0)
+                            {
+                                <span class="badge bg-warning text-dark">@player.YellowCards 🟨</span>
+                            }
+                            @if (player.RedCards > 0)
+                            {
+                                <span class="badge bg-danger">@player.RedCards 🟥</span>
+                            }
+                        </td>
+                        <td>@player.MinutesPlayed'</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@player.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@player.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center">
+            <p class="mb-0">No players found. <a asp-action="Create">Add your first player</a></p>
+        </div>
+    }
+</div>
