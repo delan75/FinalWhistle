@@ -1,0 +1,47 @@
+@model FinalWhistle.Domain.Entities.Player
+@{
+    ViewData["Title"] = "Delete Player";
+}
+
+<div class="container mt-4">
+    <h2>Delete Player</h2>
+    <hr />
+
+    <div class="alert alert-danger">
+        <h4>Are you sure you want to delete this player?</h4>
+        <p>This action cannot be undone.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Name</dt>
+                <dd class="col-sm-9">@Model.Name</dd>
+
+                <dt class="col-sm-3">Team</dt>
+                <dd class="col-sm-9">@Model.Team.Name</dd>
+
+                <dt class="col-sm-3">Jersey Number</dt>
+                <dd class="col-sm-9">@Model.JerseyNumber</dd>
+
+                <dt class="col-sm-3">Position</dt>
+                <dd class="col-sm-9">
+                    <span class="badge bg-secondary">@Model.Position</span>
+                </dd>
+
+                <dt class="col-sm-3">Statistics</dt>
+                <dd class="col-sm-9">
+                    <strong>Goals:</strong> @Model.Goals | 
+                    <strong>Assists:</strong> @Model.Assists | 
+                    <strong>Minutes:</strong> @Model.MinutesPlayed'
+                </dd>
+            </dl>
+
+            <form asp-action="Delete" method="post">
+                <input type="hidden" asp-for="Id" />
+                <button type="submit" class="btn btn-danger">Delete Player</button>
+                <a asp-action="Index" asp-route-teamId="@Model.TeamId" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
