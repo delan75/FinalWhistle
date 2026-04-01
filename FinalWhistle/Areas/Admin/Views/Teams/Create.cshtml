@@ -1,0 +1,50 @@
+@model FinalWhistle.Domain.Entities.Team
+@{
+    ViewData["Title"] = "Add New Team";
+}
+
+<div class="container mt-4">
+    <h2>Add New Team</h2>
+    <hr />
+
+    <form asp-action="Create" method="post">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="FlagUrl" class="form-label">Flag URL</label>
+                    <input asp-for="FlagUrl" class="form-control" placeholder="https://flagcdn.com/w40/us.png" />
+                    <span asp-validation-for="FlagUrl" class="text-danger"></span>
+                    <small class="form-text text-muted">Use https://flagcdn.com for free flag images</small>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="GroupId" class="form-label">Group</label>
+                    <select asp-for="GroupId" class="form-select" asp-items="ViewBag.Groups">
+                        <option value="">-- Select Group --</option>
+                    </select>
+                    <span asp-validation-for="GroupId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="IsVerified" class="form-check-input" />
+                    <label asp-for="IsVerified" class="form-check-label"></label>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Create Team</button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
