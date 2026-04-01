@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">Login</h3>
+                    <form method="post">
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+
+                    <hr class="my-4" />
+                    <p class="text-center mb-0">
+                        Don't have an account? <a asp-action="Register">Register here</a>
+                    </p>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <strong>Admin Credentials:</strong><br />
+                Email: admin@finalwhistle.com<br />
+                Password: Admin@123
+            </div>
+        </div>
+    </div>
+</div>
