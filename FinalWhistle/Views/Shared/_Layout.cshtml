@@ -3,42 +3,150 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - FinalWhistle</title>
+    <title>@ViewData["Title"] - COPA ELITE WORLD CUP 2026</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/FinalWhistle.styles.css" asp-append-version="true" />
+    <style>
+        :root {
+            --primary-blue: #0066CC;
+            --pitch-green: #00A651;
+            --trophy-gold: #FFD700;
+            --dark: #1A1A1A;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-blue) !important;
+        }
+        .nav-link {
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: var(--primary-blue) !important;
+        }
+        .btn-primary {
+            background-color: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+        .btn-primary:hover {
+            background-color: #0052a3;
+            border-color: #0052a3;
+        }
+        .btn-success {
+            background-color: var(--pitch-green);
+            border-color: var(--pitch-green);
+        }
+        .footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 2rem 0;
+        }
+        .footer a {
+            color: var(--trophy-gold);
+        }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">FinalWhistle</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    ⚽ COPA ELITE 2026
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" href="#teams">Teams</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#groups">Groups</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#fixtures">Fixtures</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#standings">Standings</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                        <strong>Admin Panel</strong>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Teams" asp-action="Index">Teams</a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Players" asp-action="Index">Players</a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Matches" asp-action="Index">Matches</a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Results" asp-action="Index">Results</a></li>
+                                    </ul>
+                                </li>
+                            }
+                            <li class="nav-item">
+                                <span class="nav-link">Hello, @User.Identity.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-link nav-link" style="border: none;">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary ms-2" asp-controller="Account" asp-action="Register">Register</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+    <div class="pb-5 mb-5">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="footer mt-5">
         <div class="container">
-            &copy; 2026 - FinalWhistle - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>COPA ELITE WORLD CUP 2026</h5>
+                    <p class="text-white-50">The ultimate 32-nation online football tournament.</p>
+                </div>
+                <div class="col-md-4">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#teams" class="text-white-50">Teams</a></li>
+                        <li><a href="#fixtures" class="text-white-50">Fixtures</a></li>
+                        <li><a href="#standings" class="text-white-50">Standings</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6>Tournament Info</h6>
+                    <p class="text-white-50">Start Date: April 1, 2026</p>
+                    <p class="text-white-50">32 Teams | 80 Matches</p>
+                </div>
+            </div>
+            <hr class="bg-white" />
+            <div class="text-center text-white-50">
+                &copy; 2026 COPA ELITE WORLD CUP. All rights reserved.
+            </div>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
