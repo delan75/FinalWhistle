@@ -1,0 +1,69 @@
+@model List<FinalWhistle.Application.Models.GroupStanding>
+@{
+    ViewData["Title"] = "Group Standings";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold" style="color: #0066CC;">Group Standings</h1>
+        <p class="lead text-muted">COPA ELITE WORLD CUP 2026</p>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var group in Model)
+        {
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header text-white text-center py-3" style="background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%);">
+                        <h4 class="mb-0 fw-bold">Group @group.GroupName</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 50px;">#</th>
+                                        <th>Team</th>
+                                        <th class="text-center" style="width: 50px;">P</th>
+                                        <th class="text-center" style="width: 50px;">W</th>
+                                        <th class="text-center" style="width: 50px;">D</th>
+                                        <th class="text-center" style="width: 50px;">L</th>
+                                        <th class="text-center" style="width: 60px;">GD</th>
+                                        <th class="text-center fw-bold" style="width: 60px;">Pts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var team in group.Teams)
+                                    {
+                                        <tr class="@(team.Position <= 2 ? "table-success" : "")">
+                                            <td class="text-center fw-bold">@team.Position</td>
+                                            <td>
+                                                <a asp-controller="Teams" asp-action="Details" asp-route-slug="@team.TeamSlug" class="text-decoration-none text-dark">
+                                                    <img src="@team.FlagUrl" alt="@team.TeamName" class="me-2" style="width: 24px; height: 16px; object-fit: cover;">
+                                                    <span class="fw-semibold">@team.TeamName</span>
+                                                </a>
+                                            </td>
+                                            <td class="text-center">@team.Played</td>
+                                            <td class="text-center">@team.Won</td>
+                                            <td class="text-center">@team.Drawn</td>
+                                            <td class="text-center">@team.Lost</td>
+                                            <td class="text-center fw-semibold @(team.GoalDifference > 0 ? "text-success" : team.GoalDifference < 0 ? "text-danger" : "")">
+                                                @(team.GoalDifference > 0 ? "+" : "")@team.GoalDifference
+                                            </td>
+                                            <td class="text-center fw-bold" style="color: #0066CC;">@team.Points</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="alert alert-info mt-4">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Qualification:</strong> Top 2 teams from each group advance to the Round of 16.
+    </div>
+</div>
