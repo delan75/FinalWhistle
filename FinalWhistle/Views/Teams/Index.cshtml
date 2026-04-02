@@ -1,0 +1,51 @@
+@model List<FinalWhistle.Domain.Entities.Team>
+@{
+    ViewData["Title"] = "Teams";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold" style="color: #0066CC;">All Teams</h1>
+        <p class="lead text-muted">32 Nations Competing for Glory</p>
+    </div>
+
+    @foreach (var group in Model.GroupBy(t => t.Group).OrderBy(g => g.Key?.DisplayOrder))
+    {
+        <div class="mb-5">
+            <h3 class="mb-3 fw-bold" style="color: #0066CC;">
+                <i class="bi bi-flag-fill me-2"></i>Group @group.Key?.Name
+            </h3>
+            <div class="row g-3">
+                @foreach (var team in group)
+                {
+                    <div class="col-md-6 col-lg-3">
+                        <a asp-action="Details" asp-route-slug="@team.Slug" class="text-decoration-none">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body text-center">
+                                    <img src="@team.FlagUrl" alt="@team.Name" class="mb-3" style="width: 80px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                    <h5 class="card-title fw-bold text-dark">@team.Name</h5>
+                                    @if (team.IsVerified)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Verified
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 102, 204, 0.2) !important;
+    }
+</style>
