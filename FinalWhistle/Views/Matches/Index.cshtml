@@ -1,0 +1,142 @@
+@model List<FinalWhistle.Domain.Entities.Match>
+@{
+    ViewData["Title"] = "Match Schedule";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold" style="color: #0066CC;">Match Schedule</h1>
+        <p class="lead text-muted">All Fixtures & Results</p>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Filter by Group</label>
+                    <select name="groupId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Groups</option>
+                        @foreach (var group in ViewBag.Groups as SelectList)
+                        {
+                            <option value="@group.Value" selected="@(group.Value == ViewBag.SelectedGroupId?.ToString())">
+                                Group @group.Text
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Filter by Stage</label>
+                    <select name="stage" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Stages</option>
+                        <option value="0" selected="@(ViewBag.SelectedStage == FinalWhistle.Domain.Enums.MatchStage.GroupStage)">Group Stage</option>
+                        <option value="1" selected="@(ViewBag.SelectedStage == FinalWhistle.Domain.Enums.MatchStage.RoundOf16)">Round of 16</option>
+                        <option value="2" selected="@(ViewBag.SelectedStage == FinalWhistle.Domain.Enums.MatchStage.QuarterFinal)">Quarter Finals</option>
+                        <option value="3" selected="@(ViewBag.SelectedStage == FinalWhistle.Domain.Enums.MatchStage.SemiFinal)">Semi Finals</option>
+                        <option value="4" selected="@(ViewBag.SelectedStage == FinalWhistle.Domain.Enums.MatchStage.Final)">Final</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Filter by Team</label>
+                    <select name="teamId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Teams</option>
+                        @foreach (var team in ViewBag.Teams as SelectList)
+                        {
+                            <option value="@team.Value" selected="@(team.Value == ViewBag.SelectedTeamId?.ToString())">
+                                @team.Text
+                            </option>
+                        }
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row g-3">
+            @foreach (var match in Model)
+            {
+                <div class="col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-primary">@match.Stage</span>
+                                @if (match.GroupId.HasValue)
+                                {
+                                    <span class="badge bg-secondary">Group @match.Group?.Name</span>
+                                }
+                                <span class="badge @(match.Status == FinalWhistle.Domain.Enums.MatchStatus.Completed ? "bg-success" : match.Status == FinalWhistle.Domain.Enums.MatchStatus.Live ? "bg-danger" : "bg-warning")">
+                                    @match.Status
+                                </span>
+                            </div>
+
+                            <div class="row align-items-center text-center">
+                                <div class="col-5">
+                                    @if (match.HomeTeam != null)
+                                    {
+                                        <img src="@match.HomeTeam.FlagUrl" alt="@match.HomeTeam.Name" class="mb-2" style="width: 60px; height: 45px; object-fit: cover; border-radius: 6px;">
+                                        <h6 class="fw-bold mb-0">@match.HomeTeam.Name</h6>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted">TBD</div>
+                                    }
+                                </div>
+
+                                <div class="col-2">
+                                    @if (match.Status == FinalWhistle.Domain.Enums.MatchStatus.Completed && match.Result != null)
+                                    {
+                                        <h3 class="fw-bold mb-0" style="color: #0066CC;">
+                                            @match.Result.HomeGoals - @match.Result.AwayGoals
+                                        </h3>
+                                        @if (match.Result.HasExtraTime)
+                                        {
+                                            <small class="text-muted">AET</small>
+                                        }
+                                        @if (match.Result.HasPenalties)
+                                        {
+                                            <small class="text-muted d-block">(@match.Result.PenaltiesHomeScore - @match.Result.PenaltiesAwayScore Pens)</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted">vs</div>
+                                    }
+                                </div>
+
+                                <div class="col-5">
+                                    @if (match.AwayTeam != null)
+                                    {
+                                        <img src="@match.AwayTeam.FlagUrl" alt="@match.AwayTeam.Name" class="mb-2" style="width: 60px; height: 45px; object-fit: cover; border-radius: 6px;">
+                                        <h6 class="fw-bold mb-0">@match.AwayTeam.Name</h6>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted">TBD</div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    @match.KickoffTime.ToString("MMM dd, yyyy")
+                                    <i class="bi bi-clock ms-2 me-1"></i>
+                                    @match.KickoffTime.ToString("HH:mm")
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+            <h5>No matches found</h5>
+            <p class="mb-0">Try adjusting your filters or check back later.</p>
+        </div>
+    }
+</div>
