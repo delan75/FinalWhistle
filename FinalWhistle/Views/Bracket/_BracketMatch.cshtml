@@ -1,0 +1,80 @@
+@model FinalWhistle.Application.Models.BracketMatch
+
+@{
+    var isCompleted = Model.Status == FinalWhistle.Domain.Enums.MatchStatus.Completed;
+    var isTbd = Model.HomeTeamId == null || Model.AwayTeamId == null;
+    var homeWinner = isCompleted && Model.HomeScore > Model.AwayScore;
+    var awayWinner = isCompleted && Model.AwayScore > Model.HomeScore;
+    
+    if (isCompleted && Model.HasPenalties)
+    {
+        homeWinner = Model.PenaltiesHomeScore > Model.PenaltiesAwayScore;
+        awayWinner = Model.PenaltiesAwayScore > Model.PenaltiesHomeScore;
+    }
+}
+
+<div class="bracket-match @(isCompleted ? "completed" : "") @(isTbd ? "tbd" : "")">
+    <div class="team-row @(homeWinner ? "winner" : "")">
+        <div class="team-info">
+            @if (!string.IsNullOrEmpty(Model.HomeTeamFlag))
+            {
+                <img src="@Model.HomeTeamFlag" alt="@Model.HomeTeamName" class="team-flag">
+            }
+            else
+            {
+                <div class="team-flag bg-secondary"></div>
+            }
+            <span class="@(homeWinner ? "fw-bold" : "")">@Model.HomeTeamName</span>
+        </div>
+        @if (isCompleted)
+        {
+            <span class="team-score">@Model.HomeScore</span>
+        }
+    </div>
+    
+    <div class="team-row @(awayWinner ? "winner" : "")">
+        <div class="team-info">
+            @if (!string.IsNullOrEmpty(Model.AwayTeamFlag))
+            {
+                <img src="@Model.AwayTeamFlag" alt="@Model.AwayTeamName" class="team-flag">
+            }
+            else
+            {
+                <div class="team-flag bg-secondary"></div>
+            }
+            <span class="@(awayWinner ? "fw-bold" : "")">@Model.AwayTeamName</span>
+        </div>
+        @if (isCompleted)
+        {
+            <span class="team-score">@Model.AwayScore</span>
+        }
+    </div>
+    
+    @if (isCompleted && Model.HasPenalties)
+    {
+        <div class="text-center mt-2">
+            <small class="badge bg-warning text-dark">
+                Penalties: @Model.PenaltiesHomeScore - @Model.PenaltiesAwayScore
+            </small>
+        </div>
+    }
+    
+    @if (!isCompleted && !isTbd)
+    {
+        <div class="text-center mt-2">
+            <small class="text-muted">
+                <i class="bi bi-calendar3 me-1"></i>
+                @Model.KickoffTime.ToString("MMM dd, HH:mm")
+            </small>
+        </div>
+    }
+    
+    @if (Model.Status == FinalWhistle.Domain.Enums.MatchStatus.Live)
+    {
+        <div class="text-center mt-2">
+            <span class="badge bg-danger">
+                <i class="bi bi-broadcast me-1"></i>LIVE
+            </span>
+        </div>
+    }
+</div>
