@@ -1,0 +1,241 @@
+@model FinalWhistle.Application.Models.UserDashboardViewModel
+@{
+    ViewData["Title"] = "My Dashboard";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold" style="color: #0066CC;">My Dashboard</h1>
+        <p class="lead text-muted">Your Prediction Stats & Performance</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-trophy-fill fs-1 mb-3" style="color: #FFD700;"></i>
+                    <h6 class="text-muted mb-2">Total Points</h6>
+                    <h2 class="fw-bold mb-0" style="color: #0066CC;">@Model.TotalPoints</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-bar-chart-fill fs-1 mb-3" style="color: #00A651;"></i>
+                    <h6 class="text-muted mb-2">Global Rank</h6>
+                    <h2 class="fw-bold mb-0" style="color: #00A651;">
+                        @if (Model.Rank > 0)
+                        {
+                            <text>#@Model.Rank</text>
+                        }
+                        else
+                        {
+                            <text>-</text>
+                        }
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-check-circle-fill fs-1 mb-3 text-success"></i>
+                    <h6 class="text-muted mb-2">Exact Scores</h6>
+                    <h2 class="fw-bold mb-0 text-success">@Model.ExactScores</h2>
+                    <small class="text-muted">3 pts each</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-clipboard-check-fill fs-1 mb-3 text-info"></i>
+                    <h6 class="text-muted mb-2">Correct Results</h6>
+                    <h2 class="fw-bold mb-0 text-info">@Model.CorrectResults</h2>
+                    <small class="text-muted">1 pt each</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Breakdown -->
+    <div class="row mb-5">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-pie-chart-fill me-2" style="color: #0066CC;"></i>
+                        Performance Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.TotalPredictions > 0)
+                    {
+                        var exactPercent = (Model.ExactScores * 100.0 / Model.TotalPredictions);
+                        var correctPercent = (Model.CorrectResults * 100.0 / Model.TotalPredictions);
+                        var wrongPercent = (Model.WrongPredictions * 100.0 / Model.TotalPredictions);
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Exact Scores</span>
+                                <strong class="text-success">@Model.ExactScores / @Model.TotalPredictions (@exactPercent.ToString("F1")%)</strong>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar bg-success" style="width: @exactPercent%">
+                                    @exactPercent.ToString("F0")%
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Correct Results</span>
+                                <strong class="text-info">@Model.CorrectResults / @Model.TotalPredictions (@correctPercent.ToString("F1")%)</strong>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar bg-info" style="width: @correctPercent%">
+                                    @correctPercent.ToString("F0")%
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Wrong Predictions</span>
+                                <strong class="text-danger">@Model.WrongPredictions / @Model.TotalPredictions (@wrongPercent.ToString("F1")%)</strong>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar bg-danger" style="width: @wrongPercent%">
+                                    @wrongPercent.ToString("F0")%
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No predictions yet
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-calendar-event me-2" style="color: #0066CC;"></i>
+                        Upcoming Matches
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.UpcomingMatches.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var prediction in Model.UpcomingMatches.Take(5))
+                            {
+                                var hasPrediction = prediction.Match.Predictions.Any();
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="flex-grow-1">
+                                            <small class="text-muted d-block">@prediction.Match.KickoffTime.ToString("MMM dd, HH:mm")</small>
+                                            <strong class="small">@prediction.Match.HomeTeam?.Name vs @prediction.Match.AwayTeam?.Name</strong>
+                                        </div>
+                                        @if (hasPrediction)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>Predicted
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <a asp-controller="Predictions" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                                                Predict
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                            No upcoming matches
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Predictions -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">
+                <i class="bi bi-clock-history me-2" style="color: #0066CC;"></i>
+                Recent Predictions
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (Model.RecentPredictions.Any())
+            {
+                <div class="row g-3">
+                    @foreach (var prediction in Model.RecentPredictions.Take(6))
+                    {
+                        var isCompleted = prediction.Match.Status == FinalWhistle.Domain.Enums.MatchStatus.Completed;
+                        var points = prediction.PointsAwarded;
+
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted">@prediction.Match.HomeTeam?.Name vs @prediction.Match.AwayTeam?.Name</small>
+                                        @if (isCompleted && points.HasValue)
+                                        {
+                                            <span class="badge bg-@(points == 3 ? "success" : points == 1 ? "warning" : "danger")">
+                                                @(points == 3 ? "+3 pts" : points == 1 ? "+1 pt" : "0 pts")
+                                            </span>
+                                        }
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Your: <strong>@prediction.PredictedHomeGoals - @prediction.PredictedAwayGoals</strong></span>
+                                        @if (isCompleted && prediction.Match.Result != null)
+                                        {
+                                            <span>Actual: <strong class="text-success">@prediction.Match.Result.HomeGoals - @prediction.Match.Result.AwayGoals</strong></span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    No predictions yet
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="text-center mt-5">
+        <a asp-controller="Predictions" asp-action="Index" class="btn btn-primary btn-lg me-2">
+            <i class="bi bi-plus-circle me-2"></i>Make Predictions
+        </a>
+        <a asp-controller="Leaderboard" asp-action="Index" class="btn btn-outline-primary btn-lg me-2">
+            <i class="bi bi-trophy me-2"></i>View Leaderboard
+        </a>
+        <a asp-controller="Predictions" asp-action="MyPredictions" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-list-check me-2"></i>All My Predictions
+        </a>
+    </div>
+</div>
