@@ -1,3 +1,4 @@
+using FinalWhistle.Application.Services;
 using FinalWhistle.Domain.Entities;
 using FinalWhistle.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
@@ -24,6 +25,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
+
+builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+builder.Services.AddScoped<IStandingsService, StandingsService>();
+builder.Services.AddScoped<IBracketService, BracketService>();
+builder.Services.AddScoped<IPredictionsService, PredictionsService>();
+builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
 
 builder.Services.AddControllersWithViews();
 
