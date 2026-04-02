@@ -1,0 +1,115 @@
+@model List<FinalWhistle.Domain.Entities.Prediction>
+@{
+    ViewData["Title"] = "My Predictions";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold" style="color: #0066CC;">My Predictions</h1>
+        <p class="lead text-muted">Track your prediction history and points</p>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row g-3">
+            @foreach (var prediction in Model)
+            {
+                var isCompleted = prediction.Match.Status == FinalWhistle.Domain.Enums.MatchStatus.Completed;
+                var points = prediction.PointsAwarded;
+                var badgeClass = points == 3 ? "success" : points == 1 ? "warning" : points == 0 ? "danger" : "secondary";
+
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-primary">@prediction.Match.Stage</span>
+                                @if (isCompleted && points.HasValue)
+                                {
+                                    <span class="badge bg-@badgeClass">
+                                        @if (points == 3)
+                                        {
+                                            <i class="bi bi-trophy-fill me-1"></i><text>+3 pts (Exact!)</text>
+                                        }
+                                        else if (points == 1)
+                                        {
+                                            <i class="bi bi-check-circle me-1"></i><text>+1 pt (Correct Result)</text>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-x-circle me-1"></i><text>0 pts</text>
+                                        }
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pending</span>
+                                }
+                            </div>
+
+                            <div class="row align-items-center text-center">
+                                <div class="col-5">
+                                    <img src="@prediction.Match.HomeTeam?.FlagUrl" alt="@prediction.Match.HomeTeam?.Name" class="mb-2" style="width: 50px; height: 37px; object-fit: cover; border-radius: 4px;">
+                                    <h6 class="fw-bold mb-0 small">@prediction.Match.HomeTeam?.Name</h6>
+                                </div>
+                                <div class="col-2">
+                                    <div class="mb-2">
+                                        <strong style="color: #0066CC;">@prediction.PredictedHomeGoals - @prediction.PredictedAwayGoals</strong>
+                                    </div>
+                                    <small class="text-muted">Your Prediction</small>
+                                </div>
+                                <div class="col-5">
+                                    <img src="@prediction.Match.AwayTeam?.FlagUrl" alt="@prediction.Match.AwayTeam?.Name" class="mb-2" style="width: 50px; height: 37px; object-fit: cover; border-radius: 4px;">
+                                    <h6 class="fw-bold mb-0 small">@prediction.Match.AwayTeam?.Name</h6>
+                                </div>
+                            </div>
+
+                            @if (isCompleted && prediction.Match.Result != null)
+                            {
+                                <div class="text-center mt-3 pt-3 border-top">
+                                    <div class="mb-1">
+                                        <strong class="text-success">Actual Score: @prediction.Match.Result.HomeGoals - @prediction.Match.Result.AwayGoals</strong>
+                                    </div>
+                                    @if (prediction.Match.Result.HasPenalties)
+                                    {
+                                        <small class="text-muted">
+                                            (Penalties: @prediction.Match.Result.PenaltiesHomeScore - @prediction.Match.Result.PenaltiesAwayScore)
+                                        </small>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center mt-3 pt-3 border-top">
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock me-1"></i>
+                                        Kickoff: @prediction.Match.KickoffTime.ToString("MMM dd, HH:mm")
+                                    </small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center py-5">
+            <i class="bi bi-clipboard-x fs-1 d-block mb-3"></i>
+            <h4>No Predictions Yet</h4>
+            <p class="mb-3">Start making predictions to earn points!</p>
+            <a asp-action="Index" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Make Predictions
+            </a>
+        </div>
+    }
+
+    <div class="text-center mt-4">
+        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-primary me-2">
+            <i class="bi bi-speedometer2 me-2"></i>My Dashboard
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Predictions
+        </a>
+    </div>
+</div>
