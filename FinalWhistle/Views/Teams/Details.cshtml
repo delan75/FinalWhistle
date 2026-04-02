@@ -1,0 +1,159 @@
+@model FinalWhistle.Domain.Entities.Team
+@{
+    ViewData["Title"] = Model.Name;
+    var allMatches = Model.HomeMatches.Concat(Model.AwayMatches).OrderByDescending(m => m.KickoffTime).ToList();
+    var wins = allMatches.Count(m => (m.HomeTeamId == Model.Id && m.Result!.HomeGoals > m.Result.AwayGoals) || (m.AwayTeamId == Model.Id && m.Result!.AwayGoals > m.Result.HomeGoals));
+    var draws = allMatches.Count(m => m.Result!.HomeGoals == m.Result.AwayGoals);
+    var losses = allMatches.Count - wins - draws;
+}
+
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5" style="background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%);">
+                    <img src="@Model.FlagUrl" alt="@Model.Name" class="mb-3" style="width: 120px; height: 90px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                    <h1 class="display-4 fw-bold text-white mb-2">@Model.Name</h1>
+                    <p class="lead text-white-50 mb-0">Group @Model.Group?.Name</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (allMatches.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Matches</h6>
+                        <h2 class="fw-bold mb-0" style="color: #0066CC;">@allMatches.Count</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Wins</h6>
+                        <h2 class="fw-bold mb-0 text-success">@wins</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Draws</h6>
+                        <h2 class="fw-bold mb-0 text-warning">@draws</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Losses</h6>
+                        <h2 class="fw-bold mb-0 text-danger">@losses</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 fw-bold" style="color: #0066CC;">
+                        <i class="bi bi-people-fill me-2"></i>Squad Roster
+                    </h4>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Players.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 60px;">#</th>
+                                        <th>Name</th>
+                                        <th>Position</th>
+                                        <th class="text-center">Goals</th>
+                                        <th class="text-center">Assists</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var player in Model.Players)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@player.JerseyNumber</td>
+                                            <td class="fw-semibold">@player.Name</td>
+                                            <td><span class="badge bg-secondary">@player.Position</span></td>
+                                            <td class="text-center">@player.Goals</td>
+                                            <td class="text-center">@player.Assists</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No players registered yet
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 fw-bold" style="color: #0066CC;">
+                        <i class="bi bi-clock-history me-2"></i>Match History
+                    </h4>
+                </div>
+                <div class="card-body p-0">
+                    @if (allMatches.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var match in allMatches.Take(5))
+                            {
+                                var isHome = match.HomeTeamId == Model.Id;
+                                var opponent = isHome ? match.AwayTeam : match.HomeTeam;
+                                var teamGoals = isHome ? match.Result!.HomeGoals : match.Result!.AwayGoals;
+                                var opponentGoals = isHome ? match.Result!.AwayGoals : match.Result!.HomeGoals;
+                                var result = teamGoals > opponentGoals ? "W" : teamGoals < opponentGoals ? "L" : "D";
+                                var resultClass = result == "W" ? "success" : result == "L" ? "danger" : "warning";
+
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge bg-@resultClass me-2">@result</span>
+                                            <small class="text-muted">vs</small>
+                                            <strong class="ms-1">@opponent?.Name</strong>
+                                        </div>
+                                        <span class="badge bg-light text-dark">@teamGoals - @opponentGoals</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                            No matches played yet
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a asp-action="Index" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-2"></i>Back to All Teams
+        </a>
+    </div>
+</div>
