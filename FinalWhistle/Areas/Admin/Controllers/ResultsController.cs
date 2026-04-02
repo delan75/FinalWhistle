@@ -1,3 +1,4 @@
+using FinalWhistle.Application.Services;
 using FinalWhistle.Domain.Entities;
 using FinalWhistle.Domain.Enums;
 using FinalWhistle.Infrastructure.Data;
@@ -14,11 +15,13 @@ public class ResultsController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IPredictionsService _predictionsService;
 
-    public ResultsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+    public ResultsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IPredictionsService predictionsService)
     {
         _context = context;
         _userManager = userManager;
+        _predictionsService = predictionsService;
     }
 
     public async Task<IActionResult> Index()
@@ -119,7 +122,11 @@ public class ResultsController : Controller
             match.IsLockedForPredictions = true;
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = "Match result saved successfully!";
+            
+            // Auto-award points to all predictions for this match
+            await _predictionsService.AwardPointsForMatchAsync(match.Id);
+            
+            TempData["Success"] = "Match result saved and points awarded successfully!";
             return RedirectToAction(nameof(Index));
         }
 
