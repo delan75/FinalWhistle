@@ -2,6 +2,7 @@ using FinalWhistle.Application.Models;
 using FinalWhistle.Application.Services;
 using FinalWhistle.Domain.Enums;
 using FinalWhistle.Infrastructure.Data;
+using FinalWhistle.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,27 +26,14 @@ public class BracketController : Controller
         if (tournament == null) return NotFound();
 
         var matches = await _bracketService.GetBracketMatchesAsync(tournament.Id);
-
-        var viewModel = new BracketViewModel
-        {
-            RoundOf16 = matches.Where(m => m.Stage == MatchStage.RoundOf16)
-                .Select(m => MapToBracketMatch(m)).ToList(),
-            QuarterFinals = matches.Where(m => m.Stage == MatchStage.QuarterFinal)
-                .Select(m => MapToBracketMatch(m)).ToList(),
-            SemiFinals = matches.Where(m => m.Stage == MatchStage.SemiFinal)
-                .Select(m => MapToBracketMatch(m)).ToList(),
-            Final = matches.FirstOrDefault(m => m.Stage == MatchStage.Final) is { } final 
-                ? MapToBracketMatch(final) : null,
-            ThirdPlace = matches.FirstOrDefault(m => m.Stage == MatchStage.ThirdPlace) is { } third 
-                ? MapToBracketMatch(third) : null,
-            CanGenerateR16 = !matches.Any(m => m.Stage == MatchStage.RoundOf16),
-            CanAdvanceToQF = matches.Count(m => m.Stage == MatchStage.RoundOf16 && m.Status == MatchStatus.Completed) == 8 
-                && !matches.Any(m => m.Stage == MatchStage.QuarterFinal),
-            CanAdvanceToSF = matches.Count(m => m.Stage == MatchStage.QuarterFinal && m.Status == MatchStatus.Completed) == 4 
-                && !matches.Any(m => m.Stage == MatchStage.SemiFinal),
-            CanAdvanceToFinal = matches.Count(m => m.Stage == MatchStage.SemiFinal && m.Status == MatchStatus.Completed) == 2 
-                && !matches.Any(m => m.Stage == MatchStage.Final)
-        };
+        var totalGroupMatches = await _context.Matches.CountAsync(m =>
+            m.TournamentId == tournament.Id && m.Stage == MatchStage.GroupStage);
+        var completedGroupMatches = await _context.Matches.CountAsync(m =>
+            m.TournamentId == tournament.Id &&
+            m.Stage == MatchStage.GroupStage &&
+            m.Status == MatchStatus.Completed);
+        var allGroupMatchesCompleted = totalGroupMatches > 0 && totalGroupMatches == completedGroupMatches;
+        var viewModel = BracketPresentationBuilder.Build(matches, allGroupMatchesCompleted);
 
         return View(viewModel);
     }
@@ -82,28 +70,6 @@ public class BracketController : Controller
             TempData["Error"] = $"Failed to advance winners. Ensure all {stage} matches are completed.";
 
         return RedirectToAction(nameof(Index));
-    }
-
-    private BracketMatch MapToBracketMatch(Domain.Entities.Match match)
-    {
-        return new BracketMatch
-        {
-            MatchId = match.Id,
-            Stage = match.Stage,
-            HomeTeamId = match.HomeTeamId,
-            HomeTeamName = match.HomeTeam?.Name ?? "TBD",
-            HomeTeamFlag = match.HomeTeam?.FlagUrl ?? string.Empty,
-            AwayTeamId = match.AwayTeamId,
-            AwayTeamName = match.AwayTeam?.Name ?? "TBD",
-            AwayTeamFlag = match.AwayTeam?.FlagUrl ?? string.Empty,
-            HomeScore = match.Result?.HomeGoals,
-            AwayScore = match.Result?.AwayGoals,
-            HasPenalties = match.Result?.HasPenalties ?? false,
-            PenaltiesHomeScore = match.Result?.PenaltiesHomeScore,
-            PenaltiesAwayScore = match.Result?.PenaltiesAwayScore,
-            Status = match.Status,
-            KickoffTime = match.KickoffTime
-        };
     }
 
     private string GetNextStageName(MatchStage stage)
