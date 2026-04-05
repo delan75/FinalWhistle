@@ -1,0 +1,284 @@
+@model FinalWhistle.Areas.Admin.Models.AdminBracketIndexViewModel
+@{
+    ViewData["Title"] = "Admin Bracket";
+}
+
+<div class="container-fluid py-5">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-1" style="color: #0066CC;">Knockout Bracket Control</h1>
+            <p class="lead text-muted mb-0">@Model.TournamentName @Model.Season progression, readiness, and winner advancement.</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Groups" asp-action="Index">
+                <i class="bi bi-table me-2"></i>Review Groups
+            </a>
+            <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Results" asp-action="Index">
+                <i class="bi bi-pencil-square me-2"></i>Enter Results
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted text-uppercase small fw-semibold mb-2">Group Stage Ready</div>
+                    <div class="display-6 fw-bold">@Model.CompletedGroupMatches<span class="text-muted fs-4">/@Model.TotalGroupMatches</span></div>
+                    <div class="text-muted">Completed group matches before knockout generation.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted text-uppercase small fw-semibold mb-2">Round Of 16</div>
+                    <div class="display-6 fw-bold">@Model.CompletedRoundOf16Matches<span class="text-muted fs-4">/8</span></div>
+                    <div class="text-muted">Completed Round of 16 matches.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted text-uppercase small fw-semibold mb-2">Quarter Finals</div>
+                    <div class="display-6 fw-bold">@Model.CompletedQuarterFinalMatches<span class="text-muted fs-4">/4</span></div>
+                    <div class="text-muted">Completed quarter-final matches.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted text-uppercase small fw-semibold mb-2">Semi Finals</div>
+                    <div class="display-6 fw-bold">@Model.CompletedSemiFinalMatches<span class="text-muted fs-4">/2</span></div>
+                    <div class="text-muted">Completed semi-final matches.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+                <div>
+                    <h5 class="card-title fw-bold mb-2">
+                        <i class="bi bi-gear-fill me-2"></i>Bracket Actions
+                    </h5>
+                    @if (Model.Bracket.CanGenerateR16)
+                    {
+                        <p class="text-muted mb-0">All group matches are complete. Generate the Round of 16 to start the knockout phase.</p>
+                    }
+                    else if (!Model.AllGroupMatchesCompleted && !Model.Bracket.RoundOf16.Any())
+                    {
+                        <p class="text-muted mb-0">Finish the remaining group-stage fixtures before generating the bracket.</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Advance winners as each knockout round is fully completed.</p>
+                    }
+                </div>
+                <div class="d-flex gap-2 flex-wrap align-self-start">
+                    @if (Model.Bracket.CanGenerateR16)
+                    {
+                        <form asp-area="Admin" asp-action="GenerateRoundOf16" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-primary" onclick="return confirm('Generate Round of 16 bracket from the final group standings?')">
+                                <i class="bi bi-lightning-fill me-2"></i>Generate Round of 16
+                            </button>
+                        </form>
+                    }
+                    @if (Model.Bracket.CanAdvanceToQF)
+                    {
+                        <form asp-area="Admin" asp-action="AdvanceWinners" method="post" class="d-inline">
+                            <input type="hidden" name="stage" value="@((int)FinalWhistle.Domain.Enums.MatchStage.RoundOf16)" />
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Advance all Round of 16 winners to the Quarter Finals?')">
+                                <i class="bi bi-arrow-right-circle me-2"></i>Advance To Quarter Finals
+                            </button>
+                        </form>
+                    }
+                    @if (Model.Bracket.CanAdvanceToSF)
+                    {
+                        <form asp-area="Admin" asp-action="AdvanceWinners" method="post" class="d-inline">
+                            <input type="hidden" name="stage" value="@((int)FinalWhistle.Domain.Enums.MatchStage.QuarterFinal)" />
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Advance all Quarter Final winners to the Semi Finals?')">
+                                <i class="bi bi-arrow-right-circle me-2"></i>Advance To Semi Finals
+                            </button>
+                        </form>
+                    }
+                    @if (Model.Bracket.CanAdvanceToFinal)
+                    {
+                        <form asp-area="Admin" asp-action="AdvanceWinners" method="post" class="d-inline">
+                            <input type="hidden" name="stage" value="@((int)FinalWhistle.Domain.Enums.MatchStage.SemiFinal)" />
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Advance all Semi Final winners to the Final?')">
+                                <i class="bi bi-arrow-right-circle me-2"></i>Advance To Final
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Bracket.RoundOf16.Any() && !Model.Bracket.QuarterFinals.Any() && !Model.Bracket.SemiFinals.Any() && Model.Bracket.Final == null)
+    {
+        <div class="alert @(Model.AllGroupMatchesCompleted ? "alert-success" : "alert-info") text-center py-5">
+            <i class="bi bi-trophy fs-1 d-block mb-3"></i>
+            <h4>Knockout Bracket Not Generated Yet</h4>
+            @if (Model.AllGroupMatchesCompleted)
+            {
+                <p class="mb-0">The group stage is complete. Use the control above to generate the Round of 16.</p>
+            }
+            else
+            {
+                <p class="mb-0">Complete all group stage matches first, then generate the Round of 16 bracket.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="bracket-container">
+            <div class="row g-4">
+                @if (Model.Bracket.RoundOf16.Any())
+                {
+                    <div class="col-lg-3">
+                        <h4 class="text-center fw-bold mb-3" style="color: #0066CC;">Round of 16</h4>
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var match in Model.Bracket.RoundOf16)
+                            {
+                                @await Html.PartialAsync("~/Views/Bracket/_BracketMatch.cshtml", match)
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (Model.Bracket.QuarterFinals.Any())
+                {
+                    <div class="col-lg-3">
+                        <h4 class="text-center fw-bold mb-3" style="color: #0066CC;">Quarter Finals</h4>
+                        <div class="d-flex flex-column gap-3" style="margin-top: 60px;">
+                            @foreach (var match in Model.Bracket.QuarterFinals)
+                            {
+                                @await Html.PartialAsync("~/Views/Bracket/_BracketMatch.cshtml", match)
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (Model.Bracket.SemiFinals.Any())
+                {
+                    <div class="col-lg-3">
+                        <h4 class="text-center fw-bold mb-3" style="color: #0066CC;">Semi Finals</h4>
+                        <div class="d-flex flex-column gap-3" style="margin-top: 140px;">
+                            @foreach (var match in Model.Bracket.SemiFinals)
+                            {
+                                @await Html.PartialAsync("~/Views/Bracket/_BracketMatch.cshtml", match)
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (Model.Bracket.Final != null)
+                {
+                    <div class="col-lg-3">
+                        <h4 class="text-center fw-bold mb-3" style="color: #FFD700;">
+                            <i class="bi bi-trophy-fill me-2"></i>Final
+                        </h4>
+                        <div style="margin-top: 220px;">
+                            @await Html.PartialAsync("~/Views/Bracket/_BracketMatch.cshtml", Model.Bracket.Final)
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.Bracket.ThirdPlace != null)
+            {
+                <div class="row mt-5">
+                    <div class="col-lg-6 mx-auto">
+                        <h4 class="text-center fw-bold mb-3" style="color: #00A651;">Third Place Match</h4>
+                        @await Html.PartialAsync("~/Views/Bracket/_BracketMatch.cshtml", Model.Bracket.ThirdPlace)
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .bracket-container {
+        overflow-x: auto;
+    }
+
+    .bracket-match {
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px;
+        transition: all 0.3s ease;
+        min-height: 100px;
+    }
+
+    .bracket-match:hover {
+        border-color: #0066CC;
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+    }
+
+    .bracket-match.completed {
+        border-color: #00A651;
+    }
+
+    .bracket-match.tbd {
+        background: #f8f9fa;
+        border-style: dashed;
+    }
+
+    .team-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+    }
+
+    .team-row.winner {
+        background: #e8f5e9;
+        font-weight: bold;
+    }
+
+    .team-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+    }
+
+    .team-flag {
+        width: 32px;
+        height: 24px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .team-score {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #0066CC;
+        min-width: 30px;
+        text-align: center;
+    }
+</style>
