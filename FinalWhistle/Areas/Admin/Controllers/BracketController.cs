@@ -1,5 +1,5 @@
-using FinalWhistle.Application.Models;
 using FinalWhistle.Application.Services;
+using FinalWhistle.Areas.Admin.Models;
 using FinalWhistle.Domain.Enums;
 using FinalWhistle.Infrastructure.Data;
 using FinalWhistle.Models;
@@ -7,8 +7,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace FinalWhistle.Controllers;
+namespace FinalWhistle.Areas.Admin.Controllers;
 
+[Area("Admin")]
+[Authorize(Roles = "Admin")]
 public class BracketController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -33,13 +35,24 @@ public class BracketController : Controller
             m.Stage == MatchStage.GroupStage &&
             m.Status == MatchStatus.Completed);
         var allGroupMatchesCompleted = totalGroupMatches > 0 && totalGroupMatches == completedGroupMatches;
-        var viewModel = BracketPresentationBuilder.Build(matches, allGroupMatchesCompleted);
+
+        var viewModel = new AdminBracketIndexViewModel
+        {
+            TournamentName = tournament.Name,
+            Season = tournament.Season,
+            TotalGroupMatches = totalGroupMatches,
+            CompletedGroupMatches = completedGroupMatches,
+            CompletedRoundOf16Matches = matches.Count(m => m.Stage == MatchStage.RoundOf16 && m.Status == MatchStatus.Completed),
+            CompletedQuarterFinalMatches = matches.Count(m => m.Stage == MatchStage.QuarterFinal && m.Status == MatchStatus.Completed),
+            CompletedSemiFinalMatches = matches.Count(m => m.Stage == MatchStage.SemiFinal && m.Status == MatchStatus.Completed),
+            Bracket = BracketPresentationBuilder.Build(matches, allGroupMatchesCompleted)
+        };
 
         return View(viewModel);
     }
 
-    [Authorize(Roles = "Admin")]
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> GenerateRoundOf16()
     {
         var tournament = await _context.Tournaments.FirstOrDefaultAsync();
@@ -55,8 +68,8 @@ public class BracketController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = "Admin")]
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> AdvanceWinners(MatchStage stage)
     {
         var tournament = await _context.Tournaments.FirstOrDefaultAsync();
@@ -72,7 +85,7 @@ public class BracketController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private string GetNextStageName(MatchStage stage)
+    private static string GetNextStageName(MatchStage stage)
     {
         return stage switch
         {
