@@ -39,10 +39,27 @@ button.accept-policy {
   line-height: inherit;
 }
 
+.app-body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1 0 auto;
+  padding-bottom: 2rem;
+}
+
 .footer {
-  position: absolute;
-  bottom: 0;
+  position: static;
   width: 100%;
-  white-space: nowrap;
-  line-height: 60px;
+  white-space: normal;
+  line-height: 1.6;
+  flex-shrink: 0;
 }
