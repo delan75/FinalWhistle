@@ -1,0 +1,158 @@
+@model FinalWhistle.Areas.Admin.Models.AdminGroupsIndexViewModel
+@{
+    ViewData["Title"] = "Admin Groups";
+}
+
+<div class="container py-5">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-1" style="color: #0066CC;">Group Stage Control</h1>
+            <p class="lead text-muted mb-0">@Model.TournamentName @Model.Season standings, progress, and knockout readiness.</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Results" asp-action="Index">
+                <i class="bi bi-pencil-square me-2"></i>Enter Results
+            </a>
+            <a class="btn btn-primary" asp-area="Admin" asp-controller="Bracket" asp-action="Index">
+                <i class="bi bi-diagram-3 me-2"></i>Open Bracket Control
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted text-uppercase small fw-semibold mb-2">Matches Completed</div>
+                    <div class="display-6 fw-bold">@Model.CompletedGroupMatches<span class="text-muted fs-4">/@Model.TotalGroupMatches</span></div>
+                    <div class="text-muted">Group-stage fixtures with final results entered.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted text-uppercase small fw-semibold mb-2">Groups Locked In</div>
+                    <div class="display-6 fw-bold">@Model.CompletedGroups<span class="text-muted fs-4">/@Model.Groups.Count</span></div>
+                    <div class="text-muted">Groups that have every scheduled match completed.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted text-uppercase small fw-semibold mb-2">Knockout Status</div>
+                    @if (Model.CanGenerateRoundOf16)
+                    {
+                        <div class="display-6 fw-bold text-success">Ready</div>
+                        <div class="text-muted">All groups are complete and the Round of 16 can be generated.</div>
+                    }
+                    else if (Model.KnockoutAlreadyGenerated)
+                    {
+                        <div class="display-6 fw-bold" style="color: #0066CC;">Live</div>
+                        <div class="text-muted">The knockout bracket already exists. Use Bracket Control to manage progression.</div>
+                    }
+                    else
+                    {
+                        <div class="display-6 fw-bold text-warning">Pending</div>
+                        <div class="text-muted">More group-stage results are needed before knockout generation.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.CanGenerateRoundOf16)
+    {
+        <div class="alert alert-success d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <strong>Everything is ready.</strong> Review the standings below, then generate the bracket from the admin bracket page.
+            </div>
+            <a class="btn btn-success" asp-area="Admin" asp-controller="Bracket" asp-action="Index">
+                <i class="bi bi-arrow-right-circle me-2"></i>Go To Bracket Control
+            </a>
+        </div>
+    }
+    else if (!Model.KnockoutAlreadyGenerated)
+    {
+        <div class="alert alert-info">
+            <strong>Next step:</strong> complete the remaining @Math.Max(0, Model.TotalGroupMatches - Model.CompletedGroupMatches) group-stage matches, then generate the Round of 16 from the bracket page.
+        </div>
+    }
+
+    <div class="row g-4">
+        @foreach (var group in Model.Groups)
+        {
+            <div class="col-xl-6">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-header d-flex justify-content-between align-items-center py-3 text-white" style="background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%);">
+                        <div>
+                            <h4 class="mb-0 fw-bold">Group @group.GroupName</h4>
+                            <small class="text-white-50">@group.CompletedMatches of @group.TotalMatches matches completed</small>
+                        </div>
+                        <span class="badge @(group.IsComplete ? "bg-success" : "bg-warning text-dark")">
+                            @(group.IsComplete ? "Complete" : $"{group.RemainingMatches} Remaining")
+                        </span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 50px;">#</th>
+                                        <th>Team</th>
+                                        <th class="text-center" style="width: 50px;">P</th>
+                                        <th class="text-center" style="width: 50px;">W</th>
+                                        <th class="text-center" style="width: 50px;">D</th>
+                                        <th class="text-center" style="width: 50px;">L</th>
+                                        <th class="text-center" style="width: 60px;">GD</th>
+                                        <th class="text-center fw-bold" style="width: 60px;">Pts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var team in group.Teams)
+                                    {
+                                        <tr class="@(team.Position <= 2 ? "table-success" : "")">
+                                            <td class="text-center fw-bold">@team.Position</td>
+                                            <td>
+                                                <a asp-area="" asp-controller="Teams" asp-action="Details" asp-route-slug="@team.TeamSlug" class="text-decoration-none text-dark">
+                                                    <img src="@team.FlagUrl" alt="@team.TeamName" class="me-2" style="width: 24px; height: 16px; object-fit: cover;">
+                                                    <span class="fw-semibold">@team.TeamName</span>
+                                                </a>
+                                            </td>
+                                            <td class="text-center">@team.Played</td>
+                                            <td class="text-center">@team.Won</td>
+                                            <td class="text-center">@team.Drawn</td>
+                                            <td class="text-center">@team.Lost</td>
+                                            <td class="text-center fw-semibold @(team.GoalDifference > 0 ? "text-success" : team.GoalDifference < 0 ? "text-danger" : "")">
+                                                @(team.GoalDifference > 0 ? "+" : "")@team.GoalDifference
+                                            </td>
+                                            <td class="text-center fw-bold" style="color: #0066CC;">@team.Points</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        @if (group.NextKickoff.HasValue)
+                        {
+                            <span class="text-muted">
+                                <i class="bi bi-calendar-event me-2"></i>Next kickoff: @group.NextKickoff.Value.ToLocalTime().ToString("MMM dd, HH:mm")
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-success">
+                                <i class="bi bi-check-circle me-2"></i>Group fixtures complete
+                            </span>
+                        }
+                        <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-controller="Results" asp-action="Index">
+                            Review Results
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
