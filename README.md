@@ -14,7 +14,7 @@ FinalWhistle is a 32-nation online football tournament platform for **COPA ELITE
 - **Database:** Azure SQL Server / SQL Server LocalDB
 - **ORM:** Entity Framework Core 8.0.11
 - **Authentication:** ASP.NET Core Identity
-- **Frontend:** Razor Views, Bootstrap 5
+- **Frontend:** Razor Views, Bootstrap 5, Bootstrap Icons
 - **Hosting:** Azure App Service (Free F1 tier)
 
 ---
@@ -24,20 +24,30 @@ FinalWhistle is a 32-nation online football tournament platform for **COPA ELITE
 ```
 FinalWhistle/
 ├── FinalWhistle.Domain/          # Core entities and business logic
-│   ├── Entities/                 # Tournament, Team, Player, Match, etc.
-│   └── Enums/                    # MatchStage, MatchStatus, etc.
-├── FinalWhistle.Application/     # Use cases and commands (future)
+│   ├── Entities/                 # Tournament, Team, Player, Match, MatchResult, Prediction, ApplicationUser
+│   └── Enums/                    # MatchStage, MatchStatus, PlayerPosition, TournamentStatus
+├── FinalWhistle.Application/     # Application services and models
+│   ├── Services/                 # StandingsService, BracketService, PredictionsService, LeaderboardService
+│   └── Models/                   # TeamStanding, GroupStanding, BracketMatch, BracketViewModel, LeaderboardEntry, UserDashboardViewModel
 ├── FinalWhistle.Infrastructure/  # EF Core, DbContext, data access
 │   └── Data/
 │       ├── ApplicationDbContext.cs
 │       └── DbSeeder.cs
 └── FinalWhistle/                 # Web application (MVC)
     ├── Areas/Admin/              # Admin panel
-    │   ├── Controllers/
-    │   └── Views/
-    ├── Controllers/
-    ├── Views/
-    └── wwwroot/
+    │   ├── Controllers/          # TeamsController, PlayersController, MatchesController, ResultsController
+    │   └── Views/                # CRUD views for admin operations
+    ├── Controllers/              # Public controllers
+    │   ├── GroupsController.cs
+    │   ├── TeamsController.cs
+    │   ├── MatchesController.cs
+    │   ├── BracketController.cs
+    │   ├── PredictionsController.cs
+    │   ├── LeaderboardController.cs
+    │   ├── DashboardController.cs
+    │   └── AccountController.cs
+    ├── Views/                    # Public views
+    └── wwwroot/                  # Static assets
 ```
 
 ---
@@ -62,7 +72,7 @@ FinalWhistle/
 - Id, TournamentId, Stage, GroupId, HomeTeamId, AwayTeamId, KickoffTime, Status, IsLockedForPredictions
 
 **MatchResults**
-- Id, MatchId, HomeGoals, AwayGoals, HasExtraTime, HasPenalties, EnteredByAdminId, EnteredAt, RevisionNumber
+- Id, MatchId, HomeGoals, AwayGoals, HasExtraTime, ExtraTimeHomeGoals, ExtraTimeAwayGoals, HasPenalties, PenaltiesHomeScore, PenaltiesAwayScore, EnteredByAdminId, EnteredAt, RevisionNumber
 
 **Predictions**
 - Id, MatchId, UserId, PredictedHomeGoals, PredictedAwayGoals, SubmittedAt, PointsAwarded
@@ -124,9 +134,9 @@ FinalWhistle/
 
 ---
 
-## Features Implemented (Phase 1)
+## Features Implemented
 
-### ✅ Completed
+### ✅ Phase 1: Foundation - COMPLETED
 
 - [x] Clean architecture (Domain, Application, Infrastructure, Web)
 - [x] Database schema with EF Core migrations
@@ -135,50 +145,146 @@ FinalWhistle/
 - [x] Database seeder (8 groups, admin user, tournament)
 - [x] Admin panel structure
 - [x] Teams CRUD (Create, Read, Update, Delete)
+- [x] Players CRUD with statistics tracking
+- [x] Matches CRUD with fixture scheduling
+- [x] Results entry system with revision history
 - [x] Account controller (Login, Register, Logout)
 
-### 🚧 In Progress (Phase 2)
+### ✅ Phase 2: Public Pages & Standings - COMPLETED
 
-- [ ] Players CRUD with bulk CSV import
-- [ ] Matches CRUD and fixture management
-- [ ] Score entry system
-- [ ] Standings computation engine
-- [ ] Public team pages
-- [ ] Registration form
+- [x] **StandingsService** - Calculates group standings with FIFA ranking rules
+  - Points calculation: Win = 3 pts, Draw = 1 pt, Loss = 0 pts
+  - Tiebreaker rules: Points → Goal Difference → Goals For → Team Name
+  - Supports single group and all groups queries
+  - Auto-computes from completed matches
+- [x] Public groups page (`/Groups`) - Displays all 8 group standings tables
+- [x] Public teams list page (`/Teams`) - Lists all 32 teams grouped by A-H
+- [x] Public team details page (`/Teams/{slug}`) - Shows squad roster and match history
+- [x] Public matches page (`/Matches`) - Full fixture list with filters (Group, Stage, Team)
+- [x] Navigation updated with public links
 
-### 📋 Planned (Phase 3-5)
+### ✅ Phase 3: Knockout Bracket - COMPLETED
 
-- [ ] Group stage tables with auto-sorting
-- [ ] Knockout bracket UI
-- [ ] Auto-populate bracket from group results
-- [ ] Fan predictions system
-- [ ] Leaderboard
-- [ ] Mobile responsiveness
-- [ ] Multilingual support (i18n)
+- [x] **BracketService** - Automated knockout bracket management
+  - `GenerateRoundOf16Async()` - Creates 8 R16 matches from group standings using FIFA matchup rules (1A vs 2B, 1C vs 2D, etc.)
+  - `AdvanceWinnersAsync()` - Auto-advances winners through knockout rounds (R16 → QF → SF → Final)
+  - Winner determination: Regular time → Extra time → Penalties
+  - `GetBracketMatchesAsync()` - Retrieves all knockout matches
+- [x] Visual bracket display (`/Bracket`) - 4-column progressive layout showing R16, QF, SF, Final
+- [x] Admin controls for bracket generation and advancement
+- [x] TBD team support for knockout stages
+- [x] Winner highlighting and penalties display
+
+### ✅ Phase 4: Fan Features - COMPLETED
+
+- [x] **PredictionsService** - Fan prediction management with points calculation
+  - `SubmitPredictionAsync()` - Fans predict match scores before kickoff
+  - Predictions locked at kickoff time (IsLockedForPredictions)
+  - Update existing predictions until match starts
+  - `AwardPointsForMatchAsync()` - Auto-awards points when results entered
+  - Points calculation: Exact score = 3 pts, Correct result = 1 pt, Wrong = 0 pts
+  - `CalculateUserTotalPointsAsync()` - Aggregates user's total points
+  - `GetUserPredictionsAsync()` - Retrieves user's prediction history
+- [x] **LeaderboardService** - Global fan rankings
+  - `GetTopUsersAsync()` - Returns top 100 users with statistics
+  - Sorting criteria: Total Points → Exact Scores → Predictions Count
+  - `GetUserRankAsync()` - Looks up individual user's rank
+  - Tracks: Total Points, Predictions Count, Exact Scores, Correct Results
+- [x] Predictions UI (`/Predictions`) - Make predictions for upcoming matches
+- [x] Prediction history (`/Predictions/MyPredictions`) - View all predictions with points
+- [x] Leaderboard page (`/Leaderboard`) - Global rankings with trophy icons for top 3
+- [x] Personal dashboard (`/Dashboard`) - User stats, performance breakdown, recent predictions
+- [x] Auto-award points when results entered (integrated with ResultsController)
+- [x] Navigation updated with fan links (Predictions, Leaderboard, Dashboard)
 
 ---
 
 ## Admin Panel Routes
 
-| Route | Description |
-|-------|-------------|
-| `/Admin/Teams` | Manage 32 teams |
-| `/Admin/Players` | Manage players (coming soon) |
-| `/Admin/Matches` | Manage fixtures (coming soon) |
-| `/Admin/Results` | Enter match scores (coming soon) |
+| Route | Description | Status |
+|-------|-------------|--------|
+| `/Admin/Teams` | Manage 32 teams | ✅ Implemented |
+| `/Admin/Players` | Manage players with statistics | ✅ Implemented |
+| `/Admin/Matches` | Manage fixtures and scheduling | ✅ Implemented |
+| `/Admin/Results` | Enter match scores with auto-award points | ✅ Implemented |
 
 ---
 
 ## Public Routes
 
-| Route | Description |
-|-------|-------------|
-| `/` | Home page |
-| `/Account/Login` | User login |
-| `/Account/Register` | Fan registration |
-| `/Teams/{slug}` | Team page (coming soon) |
-| `/Groups` | Group standings (coming soon) |
-| `/Bracket` | Knockout bracket (coming soon) |
+| Route | Description | Status |
+|-------|-------------|--------|
+| `/` | Home page | ✅ Implemented |
+| `/Account/Login` | User login | ✅ Implemented |
+| `/Account/Register` | Fan registration | ✅ Implemented |
+| `/Teams` | List all 32 teams by group | ✅ Implemented |
+| `/Teams/{slug}` | Team details with squad and history | ✅ Implemented |
+| `/Groups` | Group standings (8 tables) | ✅ Implemented |
+| `/Matches` | Fixture list with filters | ✅ Implemented |
+| `/Bracket` | Knockout bracket display | ✅ Implemented |
+| `/Predictions` | Make predictions (authenticated) | ✅ Implemented |
+| `/Predictions/MyPredictions` | Prediction history (authenticated) | ✅ Implemented |
+| `/Leaderboard` | Global fan rankings | ✅ Implemented |
+| `/Dashboard` | Personal stats and performance (authenticated) | ✅ Implemented |
+
+---
+
+## Core Services
+
+### StandingsService
+Computes group standings from completed matches using FIFA ranking rules.
+
+**Key Methods:**
+- `GetAllGroupStandingsAsync(tournamentId)` - Returns standings for all 8 groups
+- `GetGroupStandingAsync(groupId)` - Returns standings for a specific group
+
+**Logic:**
+- Iterates through completed matches in a group
+- Calculates: Played, Won, Drawn, Lost, Goals For, Goals Against, Points
+- Applies FIFA tiebreaker: Points → Goal Difference → Goals For → Team Name
+- Returns sorted list with positions (1-4 per group)
+
+### BracketService
+Manages knockout bracket generation and winner progression.
+
+**Key Methods:**
+- `GenerateRoundOf16Async(tournamentId)` - Creates 8 R16 matches from group standings
+- `AdvanceWinnersAsync(currentStage, tournamentId)` - Advances winners to next round
+- `GetBracketMatchesAsync(tournamentId)` - Retrieves all knockout matches
+
+**Logic:**
+- R16 generation: Reads top 2 teams from each group, creates matches using FIFA rules (1A vs 2B, etc.)
+- Winner advancement: Determines winner from regular time, extra time, or penalties
+- Auto-creates next round matches with TBD teams if winners not yet determined
+- Validates: All current stage matches completed before advancing
+
+### PredictionsService
+Handles fan predictions and points calculation.
+
+**Key Methods:**
+- `SubmitPredictionAsync(matchId, userId, homeGoals, awayGoals)` - Submit or update prediction
+- `AwardPointsForMatchAsync(matchId)` - Calculate and award points for all predictions
+- `CalculateUserTotalPointsAsync(userId)` - Sum user's total points
+- `GetUserPredictionsAsync(userId)` - Retrieve user's prediction history
+
+**Logic:**
+- Validates: Match not locked, kickoff time not passed
+- Updates existing prediction or creates new one
+- Points calculation: Exact score (3 pts) → Correct result (1 pt) → Wrong (0 pts)
+- Auto-triggered when admin enters match result
+
+### LeaderboardService
+Generates global fan rankings.
+
+**Key Methods:**
+- `GetTopUsersAsync(count)` - Returns top N users with statistics
+- `GetUserRankAsync(userId)` - Looks up specific user's rank
+
+**Logic:**
+- Groups predictions by user, sums points
+- Counts exact scores and correct results
+- Sorts by: Total Points (desc) → Exact Scores (desc) → Predictions Count (asc)
+- Returns top 100 by default
 
 ---
 
@@ -192,8 +298,11 @@ FinalWhistle/
 - **Light:** `#F5F5F5`
 
 ### Typography
-- **Headings:** Inter (clean, modern)
-- **Body:** System fonts (performance)
+- **Headings:** Clean, modern sans-serif
+- **Body:** System fonts (performance optimized)
+
+### Icons
+- Bootstrap Icons CDN integrated for visual clarity
 
 ### Placeholder Assets
 - **Team flags:** https://flagcdn.com (free API)
@@ -232,28 +341,69 @@ FinalWhistle/
 - [x] Admin panel skeleton
 - [x] Teams CRUD
 
-### Week 3-4: Core Data & CMS
-- [ ] Players CRUD
-- [ ] Matches CRUD
-- [ ] Score entry
-- [ ] Standings engine
-- [ ] Public team pages
+### Week 3-4: Core Data & CMS ✅ COMPLETED
+- [x] Players CRUD
+- [x] Matches CRUD
+- [x] Score entry
+- [x] Standings engine
+- [x] Public team pages
 
-### Week 5: Tournament Workflow
-- [ ] Group stage tables
-- [ ] Knockout bracket
-- [ ] Auto-populate logic
+### Week 5: Tournament Workflow ✅ COMPLETED
+- [x] Group stage tables
+- [x] Knockout bracket
+- [x] Auto-populate logic
 
-### Week 6: Fan Features
-- [ ] Predictions system
-- [ ] Leaderboard
-- [ ] User dashboard
+### Week 6: Fan Features ✅ COMPLETED
+- [x] Predictions system
+- [x] Leaderboard
+- [x] User dashboard
 
-### Week 7: Polish & Launch
-- [ ] Mobile responsiveness
-- [ ] Performance optimization
-- [ ] Documentation
-- [ ] Deployment
+### Week 7: Polish & Launch 🎯 NEXT
+- [ ] Mobile responsiveness optimization
+- [ ] Performance optimization (caching)
+- [ ] Email notifications
+- [ ] Social sharing
+- [ ] Badges/achievements
+- [ ] Azure deployment
+
+---
+
+## Git Workflow
+
+### Branch Strategy
+- **Main branch:** Production-ready code only
+- **Dev branch:** Integration branch for all features
+- **Feature branches:** Individual feature development (15+ branches)
+
+### Branches Created
+1. `feature/standings-service` - Standings computation engine
+2. `feature/groups-standings-page` - Public groups page
+3. `feature/teams-public-pages` - Public teams pages
+4. `feature/matches-public-page` - Public matches page
+5. `feature/bracket-service` - Bracket service
+6. `feature/bracket-ui` - Bracket UI
+7. `feature/predictions-service` - Predictions service
+8. `feature/leaderboard-service` - Leaderboard service
+9. `feature/predictions-ui` - Predictions UI
+10. `feature/leaderboard-ui` - Leaderboard UI
+11. `feature/dashboard-ui` - Dashboard UI
+12. `feature/di-registration` - DI container setup
+13. `feature/navigation-updates` - Navigation links
+14. `feature/auto-award-points` - Auto-award points
+15. `feature/bootstrap-icons-cdn` - Bootstrap Icons CDN
+
+**All PRs target `dev` branch** - No direct main commits
+
+---
+
+## Build Status
+
+```
+Build: ✅ SUCCESS
+Errors: 0
+Warnings: 7 (non-critical nullable reference checks in Razor views)
+Compilation Time: ~12 seconds
+```
 
 ---
 
