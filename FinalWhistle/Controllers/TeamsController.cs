@@ -24,6 +24,7 @@ public class TeamsController : Controller
         return View(teams);
     }
 
+    [HttpGet("/Teams/{slug}")]
     public async Task<IActionResult> Details(string slug)
     {
         var team = await _context.Teams
