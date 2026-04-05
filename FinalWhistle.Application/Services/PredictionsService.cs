@@ -15,6 +15,7 @@ public interface IPredictionsService
 
 public class PredictionsService : IPredictionsService
 {
+    private const int MaxAllowedPredictedGoals = 20;
     private readonly DbContext _context;
 
     public PredictionsService(DbContext context)
@@ -24,6 +25,15 @@ public class PredictionsService : IPredictionsService
 
     public async Task<bool> SubmitPredictionAsync(int matchId, string userId, int homeGoals, int awayGoals)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+            return false;
+
+        if (homeGoals < 0 || awayGoals < 0)
+            return false;
+
+        if (homeGoals > MaxAllowedPredictedGoals || awayGoals > MaxAllowedPredictedGoals)
+            return false;
+
         var match = await _context.Set<Match>()
             .FirstOrDefaultAsync(m => m.Id == matchId);
 
