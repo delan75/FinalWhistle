@@ -1,8 +1,8 @@
-@model FinalWhistle.Domain.Entities.Team
+@model FinalWhistle.Models.TeamDetailsViewModel
 @{
-    ViewData["Title"] = Model.Name;
-    var allMatches = Model.HomeMatches.Concat(Model.AwayMatches).OrderByDescending(m => m.KickoffTime).ToList();
-    var wins = allMatches.Count(m => (m.HomeTeamId == Model.Id && m.Result!.HomeGoals > m.Result.AwayGoals) || (m.AwayTeamId == Model.Id && m.Result!.AwayGoals > m.Result.HomeGoals));
+    ViewData["Title"] = Model.Team.Name;
+    var allMatches = Model.Team.HomeMatches.Concat(Model.Team.AwayMatches).OrderByDescending(m => m.KickoffTime).ToList();
+    var wins = allMatches.Count(m => (m.HomeTeamId == Model.Team.Id && m.Result!.HomeGoals > m.Result.AwayGoals) || (m.AwayTeamId == Model.Team.Id && m.Result!.AwayGoals > m.Result.HomeGoals));
     var draws = allMatches.Count(m => m.Result!.HomeGoals == m.Result.AwayGoals);
     var losses = allMatches.Count - wins - draws;
 }
@@ -12,9 +12,18 @@
         <div class="col-md-12">
             <div class="card shadow-sm">
                 <div class="card-body text-center py-5" style="background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%);">
-                    <img src="@Model.FlagUrl" alt="@Model.Name" class="mb-3" style="width: 120px; height: 90px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                    <h1 class="display-4 fw-bold text-white mb-2">@Model.Name</h1>
-                    <p class="lead text-white-50 mb-0">Group @Model.Group?.Name</p>
+                    @if (!string.IsNullOrWhiteSpace(Model.DisplayFlagUrl))
+                    {
+                        <img src="@Model.DisplayFlagUrl" alt="@Model.Team.Name" class="mb-3" style="width: 120px; height: 90px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                    }
+                    else
+                    {
+                        <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-4 bg-white text-muted fw-bold" style="width: 120px; height: 90px;">
+                            No Flag
+                        </div>
+                    }
+                    <h1 class="display-4 fw-bold text-white mb-2">@Model.Team.Name</h1>
+                    <p class="lead text-white-50 mb-0">Group @Model.Team.Group?.Name</p>
                 </div>
             </div>
         </div>
@@ -67,7 +76,7 @@
                     </h4>
                 </div>
                 <div class="card-body p-0">
-                    @if (Model.Players.Any())
+                    @if (Model.Team.Players.Any())
                     {
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
@@ -81,7 +90,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var player in Model.Players)
+                                    @foreach (var player in Model.Team.Players)
                                     {
                                         <tr>
                                             <td class="fw-bold">@player.JerseyNumber</td>
@@ -107,6 +116,63 @@
         </div>
 
         <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 fw-bold" style="color: #0066CC;">
+                        <i class="bi bi-globe2 me-2"></i>Country Snapshot
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.CountryProfile is not null)
+                    {
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5 text-muted">Country</dt>
+                            <dd class="col-sm-7 fw-semibold">@Model.CountryProfile.CommonName</dd>
+
+                            <dt class="col-sm-5 text-muted">Capital</dt>
+                            <dd class="col-sm-7">@Model.CountryProfile.Capital</dd>
+
+                            <dt class="col-sm-5 text-muted">Region</dt>
+                            <dd class="col-sm-7">
+                                @Model.CountryProfile.Region
+                                @if (!string.IsNullOrWhiteSpace(Model.CountryProfile.Subregion))
+                                {
+                                    <span class="text-muted"> • @Model.CountryProfile.Subregion</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-5 text-muted">Population</dt>
+                            <dd class="col-sm-7">@Model.CountryProfile.Population.ToString("N0")</dd>
+
+                            <dt class="col-sm-5 text-muted">Timezones</dt>
+                            <dd class="col-sm-7">@string.Join(", ", Model.CountryProfile.Timezones)</dd>
+                        </dl>
+
+                        <div class="d-flex gap-2 flex-wrap mt-3">
+                            @if (!string.IsNullOrWhiteSpace(Model.CountryProfile.GoogleMapsUrl))
+                            {
+                                <a href="@Model.CountryProfile.GoogleMapsUrl" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-map me-1"></i>Google Maps
+                                </a>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.CountryProfile.OpenStreetMapsUrl))
+                            {
+                                <a href="@Model.CountryProfile.OpenStreetMapsUrl" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pin-map me-1"></i>OpenStreetMap
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-muted">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            External country metadata is not available for this team name right now.
+                        </div>
+                    }
+                </div>
+            </div>
+
             <div class="card shadow-sm">
                 <div class="card-header bg-white py-3">
                     <h4 class="mb-0 fw-bold" style="color: #0066CC;">
@@ -119,7 +185,7 @@
                         <div class="list-group list-group-flush">
                             @foreach (var match in allMatches.Take(5))
                             {
-                                var isHome = match.HomeTeamId == Model.Id;
+                                var isHome = match.HomeTeamId == Model.Team.Id;
                                 var opponent = isHome ? match.AwayTeam : match.HomeTeam;
                                 var teamGoals = isHome ? match.Result!.HomeGoals : match.Result!.AwayGoals;
                                 var opponentGoals = isHome ? match.Result!.AwayGoals : match.Result!.HomeGoals;
