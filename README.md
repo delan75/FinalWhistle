@@ -310,39 +310,62 @@ Generates global fan rankings.
 
 ---
 
-## External Country Metadata
+## External API Integration
 
-FinalWhistle now uses the no-key **REST Countries** API as a presentation helper for national team data.
+FinalWhistle currently integrates with the **REST Countries** API to enrich national team pages with live country metadata and to provide a reliable flag fallback when a team record does not already store a flag URL.
 
-### Implemented Usage
+### Why It Exists
 
-- Public team pages use country metadata to show capital, region, subregion, population, timezones, and map links.
-- Public team pages fall back to the matched country flag when `Team.FlagUrl` is blank.
-- Admin team create/edit pages now include a live country helper panel while authors type the team name.
-- Admin team create/edit will automatically save the suggested country flag when the flag field is left blank.
+The tournament data in FinalWhistle is still fully owned by the app:
 
-### Implementation Notes
+- teams, slugs, and verification remain in the local database
+- fixtures, results, standings, and bracket logic remain internal
+- predictions and leaderboard scoring remain internal
 
-- `FinalWhistle/Services/CountryMetadataService.cs`
-  - fetches a narrowed `fields=` payload from `https://restcountries.com/v3.1/all`
-  - caches the country dataset in memory
-  - normalizes names and supports common football aliases such as `Korea Republic`, `IR Iran`, and `UAE`
-- `FinalWhistle/Controllers/TeamsController.cs`
-  - enriches `/Teams` and `/Teams/{slug}`
-- `FinalWhistle/Areas/Admin/Controllers/TeamsController.cs`
-  - powers the admin country preview
-  - auto-fills the suggested flag during create/edit when needed
+The external API is used only to improve presentation and context on public team pages.
+
+### What It Adds
+
+- country snapshot panel on `/Teams/{slug}`
+- capital, region, subregion, population, and timezones
+- Google Maps and OpenStreetMap links for the matched country
+- flag fallback on team list and team details pages when `Team.FlagUrl` is empty
+
+### How It Works
+
+- `RestCountriesCountryMetadataService` in `FinalWhistle/Services/CountryMetadataService.cs`
+  - fetches `https://restcountries.com/v3.1/all` with a narrow `fields=` projection
+  - caches the full country dataset in memory for 12 hours
+  - normalizes names before matching to reduce casing, punctuation, and accent issues
+  - supports common football aliases such as `Korea Republic`, `IR Iran`, and `UAE`
+- `TeamsController`
+  - requests country metadata during `Index()` and `Details()`
+  - keeps the stored `Team.FlagUrl` as the first choice
+  - falls back to the flag returned by REST Countries only when the database flag is blank
+- Team views
+  - `Views/Teams/Index.cshtml` shows enriched capital/region text when available
+  - `Views/Teams/Details.cshtml` renders the country snapshot card
 
 ### Failure Behavior
 
-- Tournament data remains owned by the app database.
-- If the external API is unavailable, public and admin pages still render and save normally.
-- Metadata enrichment is optional and non-blocking.
+The integration is intentionally non-blocking:
 
-### Sources
+- if the REST Countries API is unavailable, the service logs a warning and returns no enrichment
+- the page still renders using local tournament data
+- a short-lived empty cache is used to avoid repeated failed external calls
 
-- https://restcountries.com/
-- https://flagcdn.com/
+### Testing
+
+The integration is covered by automated tests:
+
+- service tests validate parsing, alias matching, and cache reuse
+- controller tests validate flag fallback and country metadata wiring
+- integration tests stub the country service so the web test suite stays deterministic
+
+### Official Provider
+
+- [REST Countries](https://restcountries.com/)
+- [FlagCDN](https://flagcdn.com/)
 
 ---
 
