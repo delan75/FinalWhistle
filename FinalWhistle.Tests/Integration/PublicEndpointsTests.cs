@@ -1,11 +1,14 @@
 using FinalWhistle.Domain.Entities;
 using FinalWhistle.Domain.Enums;
 using FinalWhistle.Infrastructure.Data;
+using FinalWhistle.Models;
+using FinalWhistle.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using Xunit;
@@ -36,6 +39,8 @@ public class PublicEndpointsTests : IClassFixture<WebApplicationFactory<Program>
                     options.UseInMemoryDatabase("TestDb", DatabaseRoot);
                 });
                 services.AddDataProtection().UseEphemeralDataProtectionProvider();
+                services.RemoveAll<ICountryMetadataService>();
+                services.AddSingleton<ICountryMetadataService>(new StubCountryMetadataService());
 
                 var sp = services.BuildServiceProvider();
                 using var scope = sp.CreateScope();
@@ -147,7 +152,9 @@ public class PublicEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("Team A", await response.Content.ReadAsStringAsync());
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Team A", content);
+        Assert.Contains("Mock Capital", content);
     }
 
     [Fact]
@@ -225,6 +232,9 @@ public class PublicEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Country Snapshot", content);
+        Assert.Contains("Mock Capital", content);
     }
 
     [Fact]
@@ -300,5 +310,23 @@ public class PublicEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Contains("/Account/Login", response.Headers.Location?.OriginalString);
+    }
+
+    private sealed class StubCountryMetadataService : ICountryMetadataService
+    {
+        public Task<CountryProfile?> GetCountryProfileAsync(string teamName, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<CountryProfile?>(new CountryProfile
+            {
+                CommonName = teamName,
+                Capital = "Mock Capital",
+                Region = "Mock Region",
+                FlagSvgUrl = "https://flagcdn.com/mock.svg",
+                FlagPngUrl = "https://flagcdn.com/mock.png",
+                GoogleMapsUrl = "https://maps.example/mock",
+                OpenStreetMapsUrl = "https://osm.example/mock",
+                Timezones = new List<string> { "UTC+00:00" }
+            });
+        }
     }
 }
