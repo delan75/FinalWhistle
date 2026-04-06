@@ -1,4 +1,4 @@
-@model List<FinalWhistle.Domain.Entities.Team>
+@model List<FinalWhistle.Models.TeamListItemViewModel>
 @{
     ViewData["Title"] = "Teams";
 }
@@ -9,22 +9,48 @@
         <p class="lead text-muted">32 Nations Competing for Glory</p>
     </div>
 
-    @foreach (var group in Model.GroupBy(t => t.Group).OrderBy(g => g.Key?.DisplayOrder))
+    @foreach (var group in Model.GroupBy(t => t.Team.Group).OrderBy(g => g.Key?.DisplayOrder))
     {
         <div class="mb-5">
             <h3 class="mb-3 fw-bold" style="color: #0066CC;">
                 <i class="bi bi-flag-fill me-2"></i>Group @group.Key?.Name
             </h3>
             <div class="row g-3">
-                @foreach (var team in group)
+                @foreach (var teamItem in group)
                 {
                     <div class="col-md-6 col-lg-3">
-                        <a asp-action="Details" asp-route-slug="@team.Slug" class="text-decoration-none">
+                        <a asp-action="Details" asp-route-slug="@teamItem.Team.Slug" class="text-decoration-none">
                             <div class="card h-100 shadow-sm hover-lift">
                                 <div class="card-body text-center">
-                                    <img src="@team.FlagUrl" alt="@team.Name" class="mb-3" style="width: 80px; height: 60px; object-fit: cover; border-radius: 8px;">
-                                    <h5 class="card-title fw-bold text-dark">@team.Name</h5>
-                                    @if (team.IsVerified)
+                                    @if (!string.IsNullOrWhiteSpace(teamItem.DisplayFlagUrl))
+                                    {
+                                        <img src="@teamItem.DisplayFlagUrl" alt="@teamItem.Team.Name" class="mb-3" style="width: 80px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                    }
+                                    else
+                                    {
+                                        <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-3 bg-light text-muted fw-bold" style="width: 80px; height: 60px;">
+                                            N/A
+                                        </div>
+                                    }
+                                    <h5 class="card-title fw-bold text-dark">@teamItem.Team.Name</h5>
+                                    @if (teamItem.CountryProfile is not null)
+                                    {
+                                        <p class="card-text text-muted small mb-2">
+                                            @if (!string.IsNullOrWhiteSpace(teamItem.CountryProfile.Capital))
+                                            {
+                                                <span>@teamItem.CountryProfile.Capital</span>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(teamItem.CountryProfile.Region))
+                                            {
+                                                @if (!string.IsNullOrWhiteSpace(teamItem.CountryProfile.Capital))
+                                                {
+                                                    <span> • </span>
+                                                }
+                                                <span>@teamItem.CountryProfile.Region</span>
+                                            }
+                                        </p>
+                                    }
+                                    @if (teamItem.Team.IsVerified)
                                     {
                                         <span class="badge bg-success">
                                             <i class="bi bi-check-circle me-1"></i>Verified

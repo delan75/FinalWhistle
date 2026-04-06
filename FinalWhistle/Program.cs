@@ -1,6 +1,7 @@
 using FinalWhistle.Application.Services;
 using FinalWhistle.Domain.Entities;
 using FinalWhistle.Infrastructure.Data;
+using FinalWhistle.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,11 +27,17 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
 
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
 builder.Services.AddScoped<IStandingsService, StandingsService>();
 builder.Services.AddScoped<IBracketService, BracketService>();
 builder.Services.AddScoped<IPredictionsService, PredictionsService>();
 builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+builder.Services.AddHttpClient<ICountryMetadataService, RestCountriesCountryMetadataService>(client =>
+{
+    client.BaseAddress = new Uri("https://restcountries.com/v3.1/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 
 builder.Services.AddControllersWithViews();
 
