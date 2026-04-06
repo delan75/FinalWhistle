@@ -310,6 +310,65 @@ Generates global fan rankings.
 
 ---
 
+## External API Integration
+
+FinalWhistle currently integrates with the **REST Countries** API to enrich national team pages with live country metadata and to provide a reliable flag fallback when a team record does not already store a flag URL.
+
+### Why It Exists
+
+The tournament data in FinalWhistle is still fully owned by the app:
+
+- teams, slugs, and verification remain in the local database
+- fixtures, results, standings, and bracket logic remain internal
+- predictions and leaderboard scoring remain internal
+
+The external API is used only to improve presentation and context on public team pages.
+
+### What It Adds
+
+- country snapshot panel on `/Teams/{slug}`
+- capital, region, subregion, population, and timezones
+- Google Maps and OpenStreetMap links for the matched country
+- flag fallback on team list and team details pages when `Team.FlagUrl` is empty
+
+### How It Works
+
+- `RestCountriesCountryMetadataService` in `FinalWhistle/Services/CountryMetadataService.cs`
+  - fetches `https://restcountries.com/v3.1/all` with a narrow `fields=` projection
+  - caches the full country dataset in memory for 12 hours
+  - normalizes names before matching to reduce casing, punctuation, and accent issues
+  - supports common football aliases such as `Korea Republic`, `IR Iran`, and `UAE`
+- `TeamsController`
+  - requests country metadata during `Index()` and `Details()`
+  - keeps the stored `Team.FlagUrl` as the first choice
+  - falls back to the flag returned by REST Countries only when the database flag is blank
+- Team views
+  - `Views/Teams/Index.cshtml` shows enriched capital/region text when available
+  - `Views/Teams/Details.cshtml` renders the country snapshot card
+
+### Failure Behavior
+
+The integration is intentionally non-blocking:
+
+- if the REST Countries API is unavailable, the service logs a warning and returns no enrichment
+- the page still renders using local tournament data
+- a short-lived empty cache is used to avoid repeated failed external calls
+
+### Testing
+
+The integration is covered by automated tests:
+
+- service tests validate parsing, alias matching, and cache reuse
+- controller tests validate flag fallback and country metadata wiring
+- integration tests stub the country service so the web test suite stays deterministic
+
+### Official Provider
+
+- [REST Countries](https://restcountries.com/)
+- [FlagCDN](https://flagcdn.com/)
+
+---
+
 ## Azure Deployment (Free Tier)
 
 ### Resources Needed
