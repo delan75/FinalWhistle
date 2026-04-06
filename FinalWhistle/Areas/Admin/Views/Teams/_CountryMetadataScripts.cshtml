@@ -1,0 +1,79 @@
+<script>
+(() => {
+    const previewContainer = document.querySelector("[data-country-preview]");
+    const nameInput = document.getElementById("Name");
+    const flagInput = document.getElementById("FlagUrl");
+
+    if (!previewContainer || !nameInput || !flagInput) {
+        return;
+    }
+
+    let previewTimer = 0;
+    let requestId = 0;
+
+    const renderErrorState = () => {
+        previewContainer.innerHTML = `
+            <div class="card shadow-sm border-danger-subtle">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-2" style="color: #0066CC;">Country Metadata Helper</h5>
+                    <p class="text-muted mb-0">The metadata preview could not be loaded right now.</p>
+                </div>
+            </div>`;
+    };
+
+    const loadPreview = () => {
+        const activeRequestId = ++requestId;
+        const params = new URLSearchParams({
+            teamName: nameInput.value || "",
+            currentFlagUrl: flagInput.value || ""
+        });
+
+        fetch(`${previewContainer.dataset.previewUrl}?${params.toString()}`, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("preview-failed");
+                }
+
+                return response.text();
+            })
+            .then(html => {
+                if (activeRequestId === requestId) {
+                    previewContainer.innerHTML = html;
+                }
+            })
+            .catch(() => {
+                if (activeRequestId === requestId) {
+                    renderErrorState();
+                }
+            });
+    };
+
+    const schedulePreview = () => {
+        window.clearTimeout(previewTimer);
+        previewTimer = window.setTimeout(loadPreview, 250);
+    };
+
+    nameInput.addEventListener("input", schedulePreview);
+    nameInput.addEventListener("blur", loadPreview);
+    flagInput.addEventListener("input", schedulePreview);
+
+    previewContainer.addEventListener("click", event => {
+        const applyButton = event.target.closest("[data-use-suggested-flag]");
+        if (!applyButton) {
+            return;
+        }
+
+        flagInput.value = applyButton.dataset.flagUrl || "";
+        loadPreview();
+        flagInput.focus();
+    });
+
+    if (nameInput.value.trim() || flagInput.value.trim()) {
+        loadPreview();
+    }
+})();
+</script>
