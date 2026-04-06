@@ -1,0 +1,103 @@
+@model FinalWhistle.Areas.Admin.Models.AdminTeamCountryMetadataViewModel
+
+@if (!Model.HasTeamName)
+{
+    <div class="card shadow-sm border-0 bg-light">
+        <div class="card-body">
+            <h5 class="fw-bold mb-2" style="color: #0066CC;">Country Metadata Helper</h5>
+            <p class="text-muted mb-0">
+                Enter a team name to preview country information and a suggested flag from REST Countries.
+            </p>
+        </div>
+    </div>
+}
+else if (!Model.HasCountryProfile)
+{
+    <div class="card shadow-sm border-warning-subtle">
+        <div class="card-body">
+            <h5 class="fw-bold mb-2" style="color: #0066CC;">Country Metadata Helper</h5>
+            <p class="mb-2">
+                No country match was found for <strong>@Model.TeamName</strong>.
+            </p>
+            <p class="text-muted mb-0">
+                You can still save the team manually and provide a custom flag URL if needed.
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0" style="color: #0066CC;">Country Metadata Helper</h5>
+                <span class="badge text-bg-light">External data</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="d-flex align-items-start gap-3 mb-3">
+                @if (Model.HasSuggestedFlag)
+                {
+                    <img src="@Model.SuggestedFlagUrl" alt="@Model.CountryProfile!.CommonName" style="width: 72px; height: 54px; object-fit: cover; border-radius: 10px; border: 1px solid #dee2e6;" />
+                }
+                <div>
+                    <h6 class="fw-bold mb-1">@Model.CountryProfile!.CommonName</h6>
+                    @if (!string.IsNullOrWhiteSpace(Model.CountryProfile.OfficialName) &&
+                         !string.Equals(Model.CountryProfile.CommonName, Model.CountryProfile.OfficialName, StringComparison.Ordinal))
+                    {
+                        <p class="text-muted small mb-0">@Model.CountryProfile.OfficialName</p>
+                    }
+                </div>
+            </div>
+
+            <dl class="row mb-0 small">
+                <dt class="col-sm-4 text-muted">Capital</dt>
+                <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.CountryProfile.Capital) ? Model.CountryProfile.Capital : "N/A")</dd>
+
+                <dt class="col-sm-4 text-muted">Region</dt>
+                <dd class="col-sm-8">
+                    @Model.CountryProfile.Region
+                    @if (!string.IsNullOrWhiteSpace(Model.CountryProfile.Subregion))
+                    {
+                        <span class="text-muted"> / @Model.CountryProfile.Subregion</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Population</dt>
+                <dd class="col-sm-8">@Model.CountryProfile.Population.ToString("N0")</dd>
+
+                <dt class="col-sm-4 text-muted">Timezones</dt>
+                <dd class="col-sm-8">@string.Join(", ", Model.CountryProfile.Timezones)</dd>
+            </dl>
+
+            <div class="d-flex gap-2 flex-wrap mt-3">
+                @if (Model.CanApplySuggestedFlag)
+                {
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-use-suggested-flag data-flag-url="@Model.SuggestedFlagUrl">
+                        Use Suggested Flag
+                    </button>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.CountryProfile.GoogleMapsUrl))
+                {
+                    <a href="@Model.CountryProfile.GoogleMapsUrl" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary">
+                        Google Maps
+                    </a>
+                }
+            </div>
+
+            @if (!Model.HasCurrentFlag && Model.HasSuggestedFlag)
+            {
+                <p class="text-muted small mb-0 mt-3">
+                    Leave the flag field blank and this suggested flag will be saved automatically.
+                </p>
+            }
+            else if (Model.HasCurrentFlag)
+            {
+                <p class="text-muted small mb-0 mt-3">
+                    A custom flag URL is already set, so it will be kept unless you replace it.
+                </p>
+            }
+        </div>
+    </div>
+}
