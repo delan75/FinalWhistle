@@ -310,6 +310,42 @@ Generates global fan rankings.
 
 ---
 
+## External Country Metadata
+
+FinalWhistle now uses the no-key **REST Countries** API as a presentation helper for national team data.
+
+### Implemented Usage
+
+- Public team pages use country metadata to show capital, region, subregion, population, timezones, and map links.
+- Public team pages fall back to the matched country flag when `Team.FlagUrl` is blank.
+- Admin team create/edit pages now include a live country helper panel while authors type the team name.
+- Admin team create/edit will automatically save the suggested country flag when the flag field is left blank.
+
+### Implementation Notes
+
+- `FinalWhistle/Services/CountryMetadataService.cs`
+  - fetches a narrowed `fields=` payload from `https://restcountries.com/v3.1/all`
+  - caches the country dataset in memory
+  - normalizes names and supports common football aliases such as `Korea Republic`, `IR Iran`, and `UAE`
+- `FinalWhistle/Controllers/TeamsController.cs`
+  - enriches `/Teams` and `/Teams/{slug}`
+- `FinalWhistle/Areas/Admin/Controllers/TeamsController.cs`
+  - powers the admin country preview
+  - auto-fills the suggested flag during create/edit when needed
+
+### Failure Behavior
+
+- Tournament data remains owned by the app database.
+- If the external API is unavailable, public and admin pages still render and save normally.
+- Metadata enrichment is optional and non-blocking.
+
+### Sources
+
+- https://restcountries.com/
+- https://flagcdn.com/
+
+---
+
 ## Azure Deployment (Free Tier)
 
 ### Resources Needed
@@ -367,43 +403,6 @@ Generates global fan rankings.
 - [ ] Azure deployment
 
 ---
-
-## Git Workflow
-
-### Branch Strategy
-- **Main branch:** Production-ready code only
-- **Dev branch:** Integration branch for all features
-- **Feature branches:** Individual feature development (15+ branches)
-
-### Branches Created
-1. `feature/standings-service` - Standings computation engine
-2. `feature/groups-standings-page` - Public groups page
-3. `feature/teams-public-pages` - Public teams pages
-4. `feature/matches-public-page` - Public matches page
-5. `feature/bracket-service` - Bracket service
-6. `feature/bracket-ui` - Bracket UI
-7. `feature/predictions-service` - Predictions service
-8. `feature/leaderboard-service` - Leaderboard service
-9. `feature/predictions-ui` - Predictions UI
-10. `feature/leaderboard-ui` - Leaderboard UI
-11. `feature/dashboard-ui` - Dashboard UI
-12. `feature/di-registration` - DI container setup
-13. `feature/navigation-updates` - Navigation links
-14. `feature/auto-award-points` - Auto-award points
-15. `feature/bootstrap-icons-cdn` - Bootstrap Icons CDN
-
-**All PRs target `dev` branch** - No direct main commits
-
----
-
-## Build Status
-
-```
-Build: ✅ SUCCESS
-Errors: 0
-Warnings: 7 (non-critical nullable reference checks in Razor views)
-Compilation Time: ~12 seconds
-```
 
 ---
 
