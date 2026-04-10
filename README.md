@@ -427,43 +427,6 @@ The integration is covered by automated tests:
 
 ---
 
-## Git Workflow
-
-### Branch Strategy
-- **Main branch:** Production-ready code only
-- **Dev branch:** Integration branch for all features
-- **Feature branches:** Individual feature development (15+ branches)
-
-### Branches Created
-1. `feature/standings-service` - Standings computation engine
-2. `feature/groups-standings-page` - Public groups page
-3. `feature/teams-public-pages` - Public teams pages
-4. `feature/matches-public-page` - Public matches page
-5. `feature/bracket-service` - Bracket service
-6. `feature/bracket-ui` - Bracket UI
-7. `feature/predictions-service` - Predictions service
-8. `feature/leaderboard-service` - Leaderboard service
-9. `feature/predictions-ui` - Predictions UI
-10. `feature/leaderboard-ui` - Leaderboard UI
-11. `feature/dashboard-ui` - Dashboard UI
-12. `feature/di-registration` - DI container setup
-13. `feature/navigation-updates` - Navigation links
-14. `feature/auto-award-points` - Auto-award points
-15. `feature/bootstrap-icons-cdn` - Bootstrap Icons CDN
-
-**All PRs target `dev` branch** - No direct main commits
-
----
-
-## Build Status
-
-```
-Build: ✅ SUCCESS
-Errors: 0
-Warnings: 7 (non-critical nullable reference checks in Razor views)
-Compilation Time: ~12 seconds
-```
-
 ---
 
 ## Contributing
